@@ -39,7 +39,21 @@ namespace ESerializerLib.Yaml
             catch (Exception) { }
 
             return new T();
+        }
 
+        public T LoadFromFile<T>(string path, T defaultValue) 
+            where T : new()
+        {
+            if (!File.Exists(path))
+            {
+                this.SaveToFile(defaultValue, path);
+
+                return defaultValue;
+            }
+
+            T loadResult = this.LoadFromFile<T>(path);
+
+            return loadResult;
         }
 
         public bool SaveToFile<T>(T box, string path)
