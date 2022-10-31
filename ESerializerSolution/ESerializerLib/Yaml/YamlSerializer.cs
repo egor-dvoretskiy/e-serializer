@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ESerializerLib.Services;
+using ESerializerLib.Services.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,13 +12,17 @@ namespace ESerializerLib.Yaml
 {
     public class YamlSerializer
     {
-        IDeserializer _deserializer;
-        ISerializer _serializer;
+        private readonly IDeserializer _deserializer;
+        private readonly ISerializer _serializer;
+
+        private readonly IDebugger _debugger;
 
         public YamlSerializer()
         {
-            _deserializer = new DeserializerBuilder().Build();
-            _serializer = new SerializerBuilder().Build();
+            this._deserializer = new DeserializerBuilder().Build();
+            this._serializer = new SerializerBuilder().Build();
+
+            this._debugger = new Debugger();
         }
 
         public T LoadFromFile<T>(string path) 
@@ -32,11 +38,14 @@ namespace ESerializerLib.Yaml
                 }
 
                 T output = new T();
-                output = _deserializer.Deserialize<T>(content);
+                output = this._deserializer.Deserialize<T>(content);
 
                 return output;
             }
-            catch (Exception) { }
+            catch (Exception exception)
+            {
+                this._debugger.Print(string.Concat(exception.Source, " ", exception.Message), ConsoleColor.Red);
+            }
 
             return new T();
         }
@@ -61,7 +70,7 @@ namespace ESerializerLib.Yaml
         {
             try
             {
-                string content = _serializer.Serialize(box);
+                string content = this._serializer.Serialize(box);
                 using (StreamWriter writer = new StreamWriter(path, false, System.Text.Encoding.Default))
                 {
                     writer.WriteLine(content);
@@ -69,7 +78,10 @@ namespace ESerializerLib.Yaml
 
                 return true;
             }
-            catch (Exception) { }
+            catch (Exception exception) 
+            {
+                this._debugger.Print(string.Concat(exception.Source, " ", exception.Message), ConsoleColor.Red);
+            }
 
             return false;
         }
